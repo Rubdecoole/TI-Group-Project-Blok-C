@@ -22,12 +22,12 @@ void setup() {
   pinMode(motorReversePin2, OUTPUT);
 }
 
-int afstandprinten(int centimeters, int sensornummer){ //Functie om de afstand naar monitor te printen(tijdelijke functie)
-  Serial.print("De afstand voor Sensor ");
-  Serial.print(sensornummer);
-  Serial.print(" is: "); 
-  Serial.print(centimeters);
-  Serial.print(" centimeters.\n");}
+//int afstandprinten(int centimeters, int sensornummer){ //Functie om de afstand naar monitor te printen(tijdelijke functie)
+//  Serial.print("De afstand voor Sensor ");
+//  Serial.print(sensornummer);
+//  Serial.print(" is: "); 
+//  Serial.print(centimeters);
+//  Serial.print(" centimeters.\n");}
   
 int meten(int echopinnummer){ //Berekent de afstand
   digitalWrite(TriggerPin1, LOW);
@@ -40,13 +40,13 @@ int meten(int echopinnummer){ //Berekent de afstand
   int afstand = (tijdgemeten/2) / 29.1; //Afstand berekenen is reistijd/2 * snelheid van geluid (je kan ook / 29.1 doen) in centimeters.
   return afstand;}
 
-char blokkade_checker(int afstandVoor, int afstandRechts, int afstandLinks){ //Checkt als er een blokkade voor is or er links of rechts ruimte vrij is.
-  if(afstandVoor < 20){//Checkt of er meer dan 20 cm vrij is aan de voorkant
+char blokkade_checker(int afstandVoor, int afstandRechts, int afstandLinks, int meetafstand){ //Checkt als er een blokkade voor is or er links of rechts ruimte vrij is.
+  if(afstandVoor < meetafstand){//Checkt of er meer dan 20 cm vrij is aan de voorkant
     
-    if(afstandRechts >= 20 && afstandLinks >= 20 || afstandRechts >= 20 && afstandLinks < 20){
+    if(afstandRechts >= meetafstand && afstandLinks >= meetafstand || afstandRechts >= meetafstand && afstandLinks < meetafstand){
       return 1;} //Als er aan links en rechts genoeg ruimte is OF alleen rechts genoeg ruimte, geeft hij 1 terug
       
-    else if(afstandRechts < 20 && afstandLinks >= 20){
+    else if(afstandRechts < meetafstand && afstandLinks >= meetafstand){
       return 2;} //Als er alleen links ruimte is geeft hij 2 terug
     else{
       return 3;
@@ -63,10 +63,21 @@ void richting(int richting_getal){ //Stuurt naar de monitor welke richting de au
     analogWrite(motorReversePin, 0);
     analogWrite(motorForwardPin2, 140);
     analogWrite(motorReversePin2, 0);
+    delay(1000);
+    analogWrite(motorForwardPin, 0);
+    analogWrite(motorReversePin, 0);
+    analogWrite(motorForwardPin2, 0);
+    analogWrite(motorReversePin2, 0);
+    delay(1000);
   }
     
   else if(richting_getal == 1){
     Serial.print("Ga naar rechts\n"); //Als de eerder gekozen richting 1 was kan/moet de auto rechtsaf
+    analogWrite(motorForwardPin, 0);
+    analogWrite(motorReversePin, 180);
+    analogWrite(motorForwardPin2, 0);
+    analogWrite(motorReversePin2, 180);
+    delay(250);
     analogWrite(motorForwardPin, 0);
     analogWrite(motorReversePin, 90);
     analogWrite(motorForwardPin2, 90);
@@ -75,6 +86,11 @@ void richting(int richting_getal){ //Stuurt naar de monitor welke richting de au
   }
   else if(richting_getal == 2){
     Serial.print("Ga naar links\n"); //Als de eerder gekozen richting 2 was dan kan de auto alleen linksaf
+    analogWrite(motorForwardPin, 0);
+    analogWrite(motorReversePin, 180);
+    analogWrite(motorForwardPin2, 0);
+    analogWrite(motorReversePin2, 180);
+    delay(250);
     analogWrite(motorForwardPin, 90);
     analogWrite(motorReversePin, 0);
     analogWrite(motorForwardPin2, 0);
@@ -87,7 +103,7 @@ void richting(int richting_getal){ //Stuurt naar de monitor welke richting de au
     analogWrite(motorReversePin, 180);
     analogWrite(motorForwardPin2, 0);
     analogWrite(motorReversePin2, 180);
-    delay(3000);
+    delay(2000);
     
     analogWrite(motorForwardPin, 0);
     analogWrite(motorReversePin, 90);
@@ -98,20 +114,21 @@ void richting(int richting_getal){ //Stuurt naar de monitor welke richting de au
 }
 void loop() {
   //cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
-
+  int afstand_te_meten = 30;
   int cm3 = meten(EchoPin3);
-  afstandprinten(cm3, 3);
+//  afstandprinten(cm3, 3);
   delay(70);
   
   int cm1 = meten(EchoPin1); //Vraagt de afstand die sensor X meet.
-  afstandprinten(cm1, 1); //Afstand naar monitor printen
+//  afstandprinten(cm1, 1); //Afstand naar monitor printen
   delay(70);
   
   int cm2 = meten(EchoPin2);
-  afstandprinten(cm2, 2); 
+//  afstandprinten(cm2, 2); 
   delay(70);
+
   
-  int reactie_keuze = blokkade_checker(cm3, cm2, cm1);
+  int reactie_keuze = blokkade_checker(cm3, cm2, cm1, afstand_te_meten);
   
   richting(reactie_keuze);
 
