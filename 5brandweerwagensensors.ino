@@ -73,6 +73,7 @@ void overwinnings_dansje(){
   delay(200);
   rechtsaf();
   delay(100);
+  stoppen();
   //ledjes hier nog laten knipperen? :)
 }
 int meten(int echopinnummer){ //Berekent de afstand
