@@ -57,6 +57,24 @@ void stoppen(){
     analogWrite(motorForwardPin2, 0);
     analogWrite(motorReversePin2, 0);
 }
+
+void overwinnings_dansje(){
+  rechtsaf();
+  delay(1200);
+  linksaf();
+  delay(1200);
+  rechtsaf();
+  delay(100);
+  linksaf();
+  delay(200);
+  rechtsaf();
+  delay(200);
+  linksaf();
+  delay(200);
+  rechtsaf();
+  delay(100);
+  //ledjes hier nog laten knipperen? :)
+}
 int meten(int echopinnummer){ //Berekent de afstand
   digitalWrite(TriggerPin1, LOW);
   delayMicroseconds(5);
