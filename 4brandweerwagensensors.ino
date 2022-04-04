@@ -57,6 +57,65 @@ void stoppen(){
     analogWrite(motorForwardPin2, 0);
     analogWrite(motorReversePin2, 0);
 }
+
+void overwinnings_dansje(){
+  rechtsaf();
+  delay(3600);
+  linksaf();
+  delay(3600);
+  rechtsaf();
+  delay(400);
+  linksaf();
+  delay(400);
+  rechtsaf();
+  delay(400);
+  linksaf();
+  delay(400);
+  rechtsaf();
+  delay(400);
+  linksaf();
+  delay(400);
+  rechtsaf();
+  delay(400);
+  linksaf();
+  delay(400);
+  rechtsaf();
+  delay(400);
+  stoppen();
+  //ledjes hier nog laten knipperen? :)
+}
+
+void naar_vlam_rijden(int positie){
+  //moet nog kijken hoelang je de wielen moet draaien om naar de desbetreffende graden te draaien
+  if(positie >= 0 && positie <= 40){
+//    rechtsaf();
+//    delay();
+//    stoppen();
+//    rijd naar 17 graden
+  }
+  
+  else if(positie > 40 && positie <= 80){
+//    rechtsaf();
+//    delay();
+//    stoppen();
+//    //rijd naar 51 graden
+  }
+
+  else if(positie > 80 && positie <= 120){
+//    linksaf();
+//    delay();
+//    stoppen();
+//    //rijd naar 85 graden
+  }
+
+  else if(positie > 120 && positie <= 160){
+//    linksaf();
+//    delay();
+//    stoppen();
+//    //rijd naar 119 graden
+  }
+}
+
 int meten(int echopinnummer){ //Berekent de afstand
   digitalWrite(TriggerPin1, LOW);
   delayMicroseconds(5);
@@ -123,31 +182,31 @@ void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monito
       linksaf();
       delay(400);
     }
-    else{
+    else if(nieuwe_rechts < afstand_te_meten && nieuwe_links < afstand_te_meten){
       richting(richting_getal, afstand_te_meten);
     }
-      
   }
 }
 void loop() {
   //cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
   int afstand_te_meten_voor = 25;
   int afstand_te_meten_zijkant = 30;
-//  int cm3 = meten(EchoPin3);
-//  delay(70);
+
   
   int cm1 = meten(EchoPin1); //Vraagt de afstand die sensor X meet.
-  delay(70);
+  delay(60);
   
   int cm2 = meten(EchoPin2);
-  delay(70);
+  delay(60);
 
   int cm4 = meten(EchoPin4);
-  delay(70);
+  delay(60);
 
   int cm5 = meten(EchoPin5);
-  delay(70);
-  
+
+//  rechtsaf();
+//  delay(460);
+//  stoppen();
   int reactie_keuze = blokkade_checker(cm2, cm1, afstand_te_meten_voor, afstand_te_meten_zijkant, cm4, cm5);
   
   richting(reactie_keuze, afstand_te_meten_zijkant);
