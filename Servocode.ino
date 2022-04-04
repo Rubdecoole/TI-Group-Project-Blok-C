@@ -4,22 +4,22 @@
 Servo servo;
 
 int pos = 0; 
-
+int vuurdetectie = 0;
 bool vuur(){
   int fire = digitalRead(FLAME);
 
   if(fire == HIGH){
-    Serial.print("wow, vuur!");
+
     return true;
   }
   else{
-    Serial.print("Niets aan de hand");
+
     return false;
   }
 }
 
 void setup() {
-
+Serial.begin(9600);
 pinMode(FLAME, INPUT);
 
 
@@ -27,21 +27,34 @@ servo.attach(9);
 servo.write(0);
 }
 
+void spotter () {
+for (pos = 0 ; pos <= 160 ; pos+=2){
+   bool vuur2 = vuur();
+   if(vuur2 == true){
+      vuurdetectie = 1;
+      Serial.print("Wow, vuur op positie: ");
+      Serial.print(analogRead(A0));
+      Serial.print("\n");
+      Serial.print("Servo positie is op: ");
+      Serial.print(pos);
+      Serial.print(" graden");
+      break;
+   }
+ else{
+  Serial.print("Niets aan de hand....\n");
+ }
+ 
+   servo.write(pos);
+}}
+
+
 void loop() {
-  bool vuur2 = vuur();
-
-for (pos = 0 ; pos <= 180 ; pos++){
-
-  if (vuur2 == true){
-    break;
+  if(vuurdetectie == 0){
+    spotter ();
   }
-  servo.write(pos);
 
-  Serial.print("\n");
 
 
   delay(10);
   
-}
-
 }
