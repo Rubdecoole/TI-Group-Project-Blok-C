@@ -1,5 +1,3 @@
-#include <Servo.h>
-
 int TriggerPin1 = 2;
 int EchoPin1 = 13;
 int EchoPin2 = 4;
@@ -11,10 +9,10 @@ int motorReversePin = 9;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
 
-int FLAME = 2;
-Servo servo;
-int pos = 0;
+int FLAME = 12;
 int vuurdetectie = 0;
+
+int counter = 0;
 
 void setup() {
   Serial.begin(9600);
@@ -27,15 +25,13 @@ void setup() {
   pinMode(motorForwardPin2, OUTPUT);
   pinMode(motorReversePin2, OUTPUT);
 
-  servo.attach(9);
-  servo.write(0);
+
 }
 
 bool vuur(){
   int fire = digitalRead(FLAME);
 
   if(fire == HIGH){
-
     return true;
   }
   else{
@@ -44,16 +40,6 @@ bool vuur(){
   }
 }
 
-void spotter () {
-  for (pos = 0 ; pos <= 160 ; pos+=2){
-    bool vuur2 = vuur();
-    if(vuur2 == true){
-      vuurdetectie = 1;
-      break;
-    }
-     servo.write(pos);
-  }
-}
 
 void rechtsaf(){
     analogWrite(motorForwardPin, 0);
@@ -199,33 +185,48 @@ void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monito
 }
 
 void loop() {
-  //cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
-  int afstand_te_meten_voor = 25;
-  int afstand_te_meten_zijkant = 30;
-
+  if(counter < 12){
+    //cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
+    int afstand_te_meten_voor = 25;
+    int afstand_te_meten_zijkant = 30;
   
-  int cm1 = meten(EchoPin1); //Vraagt de afstand die sensor X meet.
-  delay(80);
-  afstandprinten(cm1, 1);
+    
+    int cm1 = meten(EchoPin1); //Vraagt de afstand die sensor X meet.
+    delay(80);
+    afstandprinten(cm1, 1);
+    
+    int cm2 = meten(EchoPin2);
+    delay(80);
+    afstandprinten(cm2, 2);
+    
+    int cm4 = meten(EchoPin4);
+    delay(80);
+    afstandprinten(cm4, 4);
   
-  int cm2 = meten(EchoPin2);
-  delay(80);
-  afstandprinten(cm2, 2);
+    int cm5 = meten(EchoPin5);
+    afstandprinten(cm5, 5);
   
-  int cm4 = meten(EchoPin4);
-  delay(80);
-  afstandprinten(cm4, 4);
-
-  int cm5 = meten(EchoPin5);
-  afstandprinten(cm5, 5);
-
-  
-//  rechtsaf();
-//  delay(460);
-//  stoppen();
-  int reactie_keuze = blokkade_checker(cm2, cm1, afstand_te_meten_voor, afstand_te_meten_zijkant, cm4, cm5);
-  
-  richting(reactie_keuze, afstand_te_meten_zijkant);
-
-  delay(80);
+    
+  //  rechtsaf();
+  //  delay(460);
+  //  stoppen();
+    int reactie_keuze = blokkade_checker(cm2, cm1, afstand_te_meten_voor, afstand_te_meten_zijkant, cm4, cm5);
+    
+    richting(reactie_keuze, afstand_te_meten_zijkant);
+    
+    counter += 1;
+    delay(80);
+  }
+  else{
+    counter = 0;
+    stoppen();
+    delay(2000);
+    for(int i = 0; i < 200; i ++){
+      bool vuurcheck = vuur();
+      if(vuurcheck == true){
+        overwinnings_dansje();
+      }
+      delay(100);
+    }
+  }
 }
