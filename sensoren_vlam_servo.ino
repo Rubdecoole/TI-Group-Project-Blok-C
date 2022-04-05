@@ -73,7 +73,7 @@ void linksaf(){
 void rechtdoor(){
     analogWrite(motorForwardPin, 90);
     analogWrite(motorReversePin, 0);
-    analogWrite(motorForwardPin2, 50);
+    analogWrite(motorForwardPin2, 66);
     analogWrite(motorReversePin2, 0);
 }
 
