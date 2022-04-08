@@ -38,7 +38,7 @@ void setup() {
 
   pinMode(fanPin, OUTPUT);
   analogWrite(fanPin,0);
-  
+  ledjes_groen();
 
 }
 
