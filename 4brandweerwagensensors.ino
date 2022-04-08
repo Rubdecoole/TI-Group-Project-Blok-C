@@ -1,3 +1,4 @@
+#include <FastLED.h>
 int TriggerPin1 = 2;
 int EchoPin1 = 13;
 int EchoPin2 = 4;
@@ -11,6 +12,12 @@ int motorReversePin = 6;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
 
+int CLOCK_PIN = 0;
+int DATA_PIN = 1;
+int NUM_LEDS = 8;
+
+CRGB leds[NUM_LEDS];
+
 const int treshold = 600;           // sensor fire detection treshold
 const int tresholdDichtbij = 2700;   // sensor fire dichtbij treshold --waarde van lamp: 4980--
 
@@ -18,6 +25,8 @@ const int tresholdDichtbij = 2700;   // sensor fire dichtbij treshold --waarde v
 
 void setup() {
   Serial.begin(9600);
+  FastLED.addLeds<APA102, DATA_PIN, CLOCK_PIN, BGR>(leds, NUM_LEDS); 
+  FastLED.setBrightness(100);
   pinMode(TriggerPin1, OUTPUT);
   pinMode(EchoPin1, INPUT);
   pinMode(EchoPin2, INPUT);
@@ -29,8 +38,16 @@ void setup() {
 
   pinMode(fanPin, OUTPUT);
   analogWrite(fanPin,0);
+  
+
 }
 
+void ledjes_groen(){
+  for(unsigned int i = 0; i < 8; i++){
+    leds[i] = CRGB::Green;
+  }
+  FastLED.show();
+}
 void rechtsaf(){
     analogWrite(motorForwardPin, 0);
     analogWrite(motorReversePin, 50);
