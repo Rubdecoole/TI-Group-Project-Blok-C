@@ -4,15 +4,15 @@ int EchoPin2 = 4;
 int EchoPin4 = 7;
 int EchoPin5 = 8;
 
+int fanPin = 3;
+
 int motorForwardPin = 5;
 int motorReversePin = 6;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
 
-const int sensorMin = 0;            // sensor minimum
-const int sensorMax = 1024;         // sensor maximum
 const int treshold = 600;           // sensor fire detection treshold
-const int tresholdDichtbij = 1000;   // sensor fire dichtbij treshold
+const int tresholdDichtbij = 2700;   // sensor fire dichtbij treshold --waarde van lamp: 4980--
 
 
 
@@ -27,6 +27,8 @@ void setup() {
   pinMode(motorForwardPin2, OUTPUT);
   pinMode(motorReversePin2, OUTPUT);
 
+  pinMode(fanPin, OUTPUT);
+  analogWrite(fanPin,0);
 }
 
 void rechtsaf(){
@@ -198,25 +200,40 @@ void flameCheck(){
 
 
 void flameLocaliser(){
+  // Meet de afstand aan de voorkant
   int voorkant1 = meten(EchoPin4);
   delay(80);
   int voorkant2 = meten(EchoPin5);
-  Serial.println(String(voorkant1) + " en " + String(voorkant2));
+  int zijkantRechts = 0;
+  int zijkantLinks = 0;
+  // Serial.println(String(voorkant1) + " en " + String(voorkant2));
+
+  // leest de flamsensoren uit
+  int sensorReading1 = analogRead(A5);
+  int sensorReading2 = analogRead(A4);
+  int sensorReading3 = analogRead(A3);
+  int sensorReading4 = analogRead(A2);
+  int sensorReading5 = analogRead(A1);
+
+  int totaalReadings = sensorReading1+sensorReading2+sensorReading3+sensorReading4+sensorReading5;
   
-  while (25 < voorkant1 && 25 < voorkant2) {
+  while (25 < voorkant1 && 25 < voorkant2 || totaalReadings < tresholdDichtbij) {
 
-    // read the sensor on analog A0:
-    int sensorReading1 = analogRead(A5);
-    int sensorReading2 = analogRead(A4);
-    int sensorReading3 = analogRead(A3);
-    int sensorReading4 = analogRead(A2);
-    int sensorReading5 = analogRead(A1);
+    // leest de flamsensoren uit
+    sensorReading1 = analogRead(A5);
+    sensorReading2 = analogRead(A4);
+    sensorReading3 = analogRead(A3);
+    sensorReading4 = analogRead(A2);
+    sensorReading5 = analogRead(A1);
+    // Serial.println(String(voorkant1) + " en " + String(voorkant2));
 
-//    Serial.println(sensorReading1);
-//    Serial.println(sensorReading2);
-//    Serial.println(sensorReading3);
-//    Serial.println(sensorReading4);
-//    Serial.println(sensorReading5);
+    totaalReadings = sensorReading1+sensorReading2+sensorReading3+sensorReading4+sensorReading5;
+
+    Serial.println(sensorReading1);
+    Serial.println(sensorReading2);
+    Serial.println(sensorReading3);
+    Serial.println(sensorReading4);
+    Serial.println(sensorReading5);
     
     if (sensorReading1>sensorReading2 && sensorReading1>sensorReading3 && sensorReading1>sensorReading4 && sensorReading1>sensorReading5){
       Serial.println("rechts");
@@ -231,6 +248,21 @@ void flameLocaliser(){
     else if (sensorReading3>sensorReading1 && sensorReading3>sensorReading2 && sensorReading3>sensorReading4 && sensorReading3>sensorReading5){
       Serial.println("midden");
       rechtdoor();
+      if (25 < voorkant1 || 25 < voorkant2){
+        zijkantRechts = meten(EchoPin2);
+        delay(80);
+        zijkantLinks= meten(EchoPin1);
+        delay(80);
+        voorkant1 = meten(EchoPin4);
+        delay(80);
+        voorkant2 = meten(EchoPin5);
+
+        int reactie_keuze = blokkade_checker(zijkantLinks, zijkantRechts, 25, 30, voorkant1, voorkant2);
+
+        richting(reactie_keuze, 30);        
+        
+        break;
+        }
       }
     else if (sensorReading4>sensorReading1 && sensorReading4>sensorReading2 && sensorReading4>sensorReading3 && sensorReading4>sensorReading5){
       Serial.println("links-midden");
@@ -243,20 +275,27 @@ void flameLocaliser(){
       delay(400);
       }
     rechtdoor();
-    delay(300);
+    delay(100);  
 
+      
+    // meet de afstand aan de voorkant
     voorkant1 = meten(EchoPin4);
     delay(80);
     voorkant2 = meten(EchoPin5);
-    Serial.println(String(voorkant1) + " en " + String(voorkant2));
+    // Serial.println(String(voorkant1) + " en " + String(voorkant2));
     }
-
-  stoppen();
-  achteruit();
-  delay(250);
-  stoppen();
-  Serial.println("***flam gevonden***");
-  overwinnings_dansje(); 
+    
+  if (totaalReadings > tresholdDichtbij){
+    Serial.println("***Vlam gevonden***");
+    stoppen();
+    analogWrite(fanPin,255);
+    delay(7000);
+    analogWrite(fanPin,0);
+    achteruit();
+    delay(400);
+    stoppen();
+    overwinnings_dansje();
+    }
   }
 
   
@@ -286,9 +325,6 @@ void loop() {
   afstandprinten(cm5, 5);
   
     
-  //  rechtsaf();
-  //  delay(460);
-  //  stoppen();
   int reactie_keuze = blokkade_checker(cm2, cm1, afstand_te_meten_voor, afstand_te_meten_zijkant, cm4, cm5);
     
   richting(reactie_keuze, afstand_te_meten_zijkant);
