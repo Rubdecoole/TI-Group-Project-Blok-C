@@ -94,7 +94,21 @@ void overwinnings_dansje(){
   //ledjes hier nog laten knipperen? :)
 }
 
+bool vuur_tijdens_blussen(){
+    int huidigvuur1 = analogRead(A5);
+    int huidigvuur2 = analogRead(A4);
+    int huidigvuur3 = analogRead(A3);
+    int huidigvuur4 = analogRead(A2);
+    int huidigvuur5 = analogRead(A1);
+    int huidigtotaalReadings = huidigvuur1+huidigvuur2+huidigvuur3+huidigvuur4+huidigvuur5;
 
+    if(huidigtotaalReadings > 800){
+      return true;
+    }
+    else{
+      return false;
+    }
+}
 
 int afstandprinten(int centimeters, int sensornummer){ //Functie om de afstand naar monitor te printen(tijdelijke functie)
   // Serial.print("De afstand voor Sensor ");
@@ -291,8 +305,17 @@ void flameLocaliser(){
     Serial.println("***Vlam gevonden***");
     stoppen();
     analogWrite(fanPin,255);
-    delay(7000);
+    
+    while(true){
+      bool huidigvuur = vuur_tijdens_blussen();
+      if(huidigvuur == false){
+        break;
+      }
+    }
+    
     analogWrite(fanPin,0);
+    delay(2000);
+    // hier dus nog een keer vuur checken
     achteruit();
     delay(400);
     stoppen();
