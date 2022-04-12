@@ -1,18 +1,19 @@
 #include <Arduino_AVRSTL.h>
 using namespace std;
 
-int TriggerPin1 = 2;
+int TriggerPin1 = 2;                                                               // defineeren van de pinnen voor de afstandssensoren
 int EchoPin1 = 13;
 int EchoPin2 = 4;
 int EchoPin4 = 7;
 int EchoPin5 = 8;
 
-int fanPin = 3;
+int fanPin = 3;                                                                    // defineeren van de pin voor de ventilator
 
-int motorForwardPin = 5;
+int motorForwardPin = 5;                                                           // defineeren van de pinnen voor de motoren
 int motorReversePin = 6;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
+
 
 const int treshold = 600;                                                          // sensor fire detection treshold
 const int tresholdDichtbij = 2700;                                                 // sensor fire dichtbij treshold --waarde van lamp: 4980--
@@ -34,6 +35,9 @@ void setup() {
 
   pinMode(fanPin, OUTPUT);
   analogWrite(fanPin,0);
+
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, 0);
 
 }
 
