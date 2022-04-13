@@ -48,4 +48,4 @@ Setup ventilator(GRAND FLEX SM1225GF12SH-P):
 - VCC: Gaat naar de Mosfet opstelling.
 - GND: Gaat naar de arduino ground.
 - 
-![image](https://user-images.githubusercontent.com/60223859/163189724-9286b35c-6629-4ad3-9a0b-164f9f91182f.png)
+![image](https://user-images.githubusercontent.com/60223859/163190798-d4767304-5a21-4783-8426-f2f26bcd229d.png)
