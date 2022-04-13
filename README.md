@@ -2,7 +2,6 @@
 Repository voor het TI project
 
 De kenmerken van onze brandweerwagen Bruni:
-
 -	We hebben gekozen voor een 3 wieler model omdat dit zorgt voor een draaicirkel die zo klein mogelijk is.
 -	We hebben het formaat van onze auto in verhouding groot gemaakt omdat dit zo robuust is en alle onderdelen kan dragen die we erop wouden.
 -	De motoren zitten op een aparte powerbron omdat deze piekstormen kunnen geven en dan de sensoren zouden verstoren.
@@ -22,6 +21,7 @@ Setup Serial MP3 player A:
 - VCC: Gaat op 5V van de Arduino.
 - GND: Gaat op de Ground van de Arduino.
 
+
 Setup Afstandssensoren(HC-SR04):
 - Pin 2: Gaat naar alle triggerpinnen van de afstandsensoren.
 - Pin 13: Gaat naar de echopin van de linkerkant afstandssensor.
@@ -31,6 +31,7 @@ Setup Afstandssensoren(HC-SR04):
 - VCC(van elke afstandssensor): Gaat op 5V van de Arduino.
 - GND(van elke afstandsensor): Gaat op de Ground van de Arduino.
 
+
 Setup Motoren:
 - De motoren krijgen een eigen 9V batterij.
 - Pin 5: Gaat naar de linkermotor vooruit.
@@ -39,6 +40,7 @@ Setup Motoren:
 - Pin 11: Gaat naar de rechtermotor achteruit.
 - VCC: Naar de Power van de H-brug.
 - GND: Naar de Ground van de H-brug.
+
 
 Setup ventilator(GRAND FLEX SM1225GF12SH-P):
 - De ventilator krijgt een eigen 9V batterij.
