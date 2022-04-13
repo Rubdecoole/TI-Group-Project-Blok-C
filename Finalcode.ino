@@ -1,6 +1,7 @@
 #include <Arduino_AVRSTL.h>                                                             // Include de benodigde libraries voor ons project.
 #include <SoftwareSerial.h>
 using namespace std;
+
 #define MP3_RX 12 // to TX                                                              // Benoem de RX/TX pinnen voor de MP3 speler.
 #define MP3_TX 9 // to RX
 
@@ -24,12 +25,11 @@ int motorReversePin = 6;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
 
-
 const int treshold = 300;                                                               // Vuur sensor detection threshold, als een waarde hoger wordt dan dit, dan pakt hij hem op.
 const int tresholdDichtbij = 2700;                                                      // Vuur sensor threshold, als de waarde hierboven komt dan is de vlam dichtbij genoeg. --waarde van een lamp is: 4980--
 
-int afstand_te_meten_voor = 25;                                                         
-int afstand_te_meten_zijkant = 30;                                                      // De afstand die de auto moet meten in CM aan de voorkant en de zijkant.
+int afstand_te_meten_voor = 25;                                                         // De afstand die de auto moet meten in CM aan de voorkant en de zijkant.                                                       
+int afstand_te_meten_zijkant = 30;
 
 bool SireneAan = 0;                                                                     // Waarde om te kijken of de sirene al aan staat.
 
