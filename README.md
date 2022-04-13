@@ -40,7 +40,7 @@ Setup Motoren:
 - VCC: Naar de Power van de H-brug.
 - GND: Naar de Ground van de H-brug.
 
-- Setup ventilator(GRAND FLEX SM1225GF12SH-P):
+Setup ventilator(GRAND FLEX SM1225GF12SH-P):
 - De ventilator krijgt een eigen 9V batterij.
 - Pin 3: Gaat naar de Mosfet(TIP122).
 - VCC: Gaat naar de Mosfet opstelling.
