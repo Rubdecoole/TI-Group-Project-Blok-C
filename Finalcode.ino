@@ -1,19 +1,37 @@
-int TriggerPin1 = 2;
+#include <Arduino_AVRSTL.h>
+#include <SoftwareSerial.h>
+using namespace std;
+#define MP3_RX 12 // to TX
+#define MP3_TX 9 // to RX
+
+static int8_t select_SD_card[] = {0x7e, 0x03, 0X35, 0x01, 0xef};                      // Kies de sd card voor de speaker
+static int8_t stopgeluid[] = {0x7e, 0x02, 0x0e, 0xef};                                // Stop het geluid dat nu wordt afgespeeld
+static int8_t volume[] = {0x7e, 0x03, 0x31, 0x14, 0xef};                              // Volume regelen, 4de bit vanaf links bepaald hoe hard
+static int8_t sirene[] = {0x7e, 0x04, 0x41, 0x00, 0x03, 0xef};                        // Sirene geluid
+static int8_t overwinningsmuziekje[] = {0x7e, 0x04, 0x41, 0x00, 0x02, 0xef};          // Kies nummer om af te spelen, 5de bit vanaf links bepaalt welk mp3 bestand
+SoftwareSerial MP3(MP3_RX, MP3_TX);
+
+int TriggerPin1 = 2;                                                                   // defineeren van de pinnen voor de afstandssensoren
 int EchoPin1 = 13;
 int EchoPin2 = 4;
 int EchoPin4 = 7;
 int EchoPin5 = 8;
 
-int fanPin = 3;
+int fanPin = 3;                                                                       // defineeren van de pin voor de ventilator
 
-int motorForwardPin = 5;
+int motorForwardPin = 5;                                                              // defineeren van de pinnen voor de motoren
 int motorReversePin = 6;
 int motorForwardPin2 = 10;
 int motorReversePin2 = 11;
 
-const int treshold = 600;           // sensor fire detection treshold
-const int tresholdDichtbij = 2700;   // sensor fire dichtbij treshold --waarde van lamp: 4980--
 
+const int treshold = 300;                                                              // sensor fire detection treshold
+const int tresholdDichtbij = 2700;                                                     // sensor fire dichtbij treshold --waarde van lamp: 4980--
+
+int afstand_te_meten_voor = 25;                                                        // cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
+int afstand_te_meten_zijkant = 30;
+
+bool SireneAan = 0;                                                                    // Waarde om te kijken of de sirene al aan staat
 
 
 void setup() {
@@ -29,8 +47,15 @@ void setup() {
 
   pinMode(fanPin, OUTPUT);
   analogWrite(fanPin,0);
+  MP3.begin(9600);
+  MP3command(select_SD_card, 5);                                                     // Stuur commands naar mp3 speler, laatste getal geeft door hoeveel bytes er gestuurd worden.
+  MP3command(volume, 5);
+}
 
-
+void MP3command(int8_t command[], int len){
+  // Serial.print("\nMP3 Command => ");
+  for(int i=0;i<len;i++){ MP3.write(command[i]); Serial.print(command[i], HEX); }
+  delay(1000);
 }
 
 void rechtsaf(){
@@ -40,20 +65,22 @@ void rechtsaf(){
     analogWrite(motorReversePin2, 0);
 }
 
+
 void linksaf(){
     analogWrite(motorForwardPin, 50);
     analogWrite(motorReversePin, 0);
     analogWrite(motorForwardPin2, 0);
-    analogWrite(motorReversePin2, 50);
-    
+    analogWrite(motorReversePin2, 50); 
 }
+
 
 void rechtdoor(){
     analogWrite(motorForwardPin, 90);
     analogWrite(motorReversePin, 0);
-    analogWrite(motorForwardPin2, 66);
+    analogWrite(motorForwardPin2, 73);
     analogWrite(motorReversePin2, 0);
 }
+
 
 void achteruit(){
     analogWrite(motorForwardPin, 0);
@@ -62,6 +89,7 @@ void achteruit(){
     analogWrite(motorReversePin2, 130);
 }
 
+
 void stoppen(){
     analogWrite(motorForwardPin, 0);
     analogWrite(motorReversePin, 0);
@@ -69,7 +97,9 @@ void stoppen(){
     analogWrite(motorReversePin2, 0);
 }
 
+
 void overwinnings_dansje(){
+  MP3command(overwinningsmuziekje, 6);
   rechtsaf();
   delay(400);
   linksaf();
@@ -90,75 +120,64 @@ void overwinnings_dansje(){
   delay(3600);
   linksaf();
   delay(3600);
+  MP3command(stopgeluid, 4);
   stoppen();
-  //ledjes hier nog laten knipperen? :)
-}
-
-bool vuur_tijdens_blussen(){
-    int huidigvuur1 = analogRead(A5);
-    int huidigvuur2 = analogRead(A4);
-    int huidigvuur3 = analogRead(A3);
-    int huidigvuur4 = analogRead(A2);
-    int huidigvuur5 = analogRead(A1);
-    int huidigtotaalReadings = huidigvuur1+huidigvuur2+huidigvuur3+huidigvuur4+huidigvuur5;
-
-    if(huidigtotaalReadings > 800){
-      return true;
-    }
-    else{
-      return false;
-    }
-}
-
-int afstandprinten(int centimeters, int sensornummer){ //Functie om de afstand naar monitor te printen(tijdelijke functie)
-  // Serial.print("De afstand voor Sensor ");
-  // Serial.print(sensornummer);
-  // Serial.print(" is: "); 
-  // Serial.print(centimeters);
-  // Serial.print(" centimeters.\n");
 }
 
 
+vector<int> metenVoor(){
+  int voorkantRechts = meten(EchoPin4);
+  delay(80);
+  int voorkantLinks = meten(EchoPin5);
+  return {voorkantRechts,voorkantLinks};
+  }
 
-int meten(int echopinnummer){ //Berekent de afstand
+  
+vector<int> metenZijkant(){
+  int zijkantRechts = meten(EchoPin2);
+  delay(80);
+  int zijkantLinks= meten(EchoPin1);
+  return {zijkantRechts,zijkantLinks};
+  }
+
+
+int meten(int echopinnummer){                                                                //Berekent de afstand
   digitalWrite(TriggerPin1, LOW);
   delayMicroseconds(5);
   digitalWrite(TriggerPin1, HIGH);
   delayMicroseconds(10);
-  digitalWrite(TriggerPin1, LOW); //Afstandssensor een sonar laten sturen
+  digitalWrite(TriggerPin1, LOW);                                                            // Afstandssensor een sonar laten sturen
   
-  int tijdgemeten = pulseIn(echopinnummer, HIGH);//Meet hoelang de sonar deed om weer terug te komen bij de sensor
-  int afstand = (tijdgemeten/2) / 29.1; //Afstand berekenen is reistijd/2 * snelheid van geluid (je kan ook / 29.1 doen) in centimeters.
+  int tijdgemeten = pulseIn(echopinnummer, HIGH);                                            // Meet hoelang de sonar deed om weer terug te komen bij de sensor
+  int afstand = (tijdgemeten/2) / 29.1;                                                      // Afstand berekenen is reistijd/2 * snelheid van geluid (je kan ook / 29.1 doen) in centimeters.
   return afstand;}
 
 
-
-char blokkade_checker(int afstandRechts, int afstandLinks, int meetafstandvoor, int meetafstandzijkant, int afstandRechtsVoor, int afstandLinksVoor){ //Checkt als er een blokkade voor is or er links of rechts ruimte vrij is.
-  if(afstandRechtsVoor < meetafstandvoor || afstandLinksVoor < meetafstandvoor){//Checkt of er meer dan 20 cm vrij is aan de voorkant
-    
-    if(afstandRechts >= meetafstandzijkant && afstandLinks >= meetafstandzijkant || afstandRechts >= meetafstandzijkant && afstandLinks < meetafstandzijkant){
-      return 1;} //Als er aan links en rechts genoeg ruimte is OF alleen rechts genoeg ruimte, geeft hij 1 terug
+char blokkade_checker(int afstandRechts, int afstandLinks, int meetafstandvoor,
+int meetafstandzijkant, int afstandRechtsVoor, int afstandLinksVoor){                        // Checkt als er een blokkade voor is or er links of rechts ruimte vrij is.
+  if(afstandRechtsVoor < meetafstandvoor || afstandLinksVoor < meetafstandvoor){             // Checkt of er meer dan 20 cm vrij is aan de voorkant
+     
+    if(afstandRechts >= meetafstandzijkant && afstandLinks >= meetafstandzijkant ||
+    afstandRechts >= meetafstandzijkant && afstandLinks < meetafstandzijkant){
+      return 1;}                                                                             // Als er aan links en rechts genoeg ruimte is OF alleen rechts genoeg ruimte, geeft hij 1 terug
       
     else if(afstandRechts < meetafstandzijkant && afstandLinks >= meetafstandzijkant){
-      return 2;} //Als er alleen links ruimte is geeft hij 2 terug
+      return 2;}                                                                             // Als er alleen links ruimte is geeft hij 2 terug
     else{
       return 3;
     }
   }
   else{
-    return 0;} //Geeft 0 terug als er genoeg ruimte aan de voorkant is en dus geen blokkade
+    return 0;}                                                                               // Geeft 0 terug als er genoeg ruimte aan de voorkant is en dus geen blokkade
 }
 
 
-
-void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monitor welke richting de auto op moet(tijdelijke functie)
-  if(richting_getal == 0){
-    Serial.print("Ga rechtdoor\n"); //Als de eerder gekozen richting 0 was kan de auto rechtdoor. 
+void richting(int richting_getal, int afstand_te_meten){                                     // Stuurt naar de monitor welke richting de auto op moet(tijdelijke functie)
+  if(richting_getal == 0){                                                                   // Als de eerder gekozen richting 0 was kan de auto rechtdoor. 
     rechtdoor();
   }
     
-  else if(richting_getal == 1){
-    Serial.print("Ga naar rechts\n"); //Als de eerder gekozen richting 1 was kan/moet de auto rechtsaf
+  else if(richting_getal == 1){                                                              // Als de eerder gekozen richting 1 was kan/moet de auto rechtsaf
     stoppen();
     delay(100);
     achteruit();
@@ -166,8 +185,7 @@ void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monito
     rechtsaf();
     delay(400);
   }
-  else if(richting_getal == 2){
-    Serial.print("Ga naar links\n"); //Als de eerder gekozen richting 2 was dan kan de auto alleen linksaf
+  else if(richting_getal == 2){                                                              // Als de eerder gekozen richting 2 was dan kan de auto alleen linksaf
     stoppen();
     delay(100);
     achteruit();
@@ -176,7 +194,6 @@ void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monito
     delay(400);
   }
   else if(richting_getal == 3){
-    Serial.print("Ga achteruit\n");
     achteruit();
     delay(1000);
     int nieuwe_links = meten(EchoPin1);
@@ -198,160 +215,136 @@ void richting(int richting_getal, int afstand_te_meten){ //Stuurt naar de monito
 
 
 
-
-void flameCheck(){
-  // read the sensor on analog A0:
+vector<int> vlameSensorReadings(){
   int sensorReading1 = analogRead(A5);
   int sensorReading2 = analogRead(A4);
   int sensorReading3 = analogRead(A3);
   int sensorReading4 = analogRead(A2);
   int sensorReading5 = analogRead(A1);
+  return {sensorReading1,sensorReading2,sensorReading3,sensorReading4,sensorReading5};
+  }
 
-  if (sensorReading1>treshold || sensorReading2>treshold || sensorReading3>treshold || sensorReading4>treshold || sensorReading5>treshold){
+
+int vlameSensorReadingsTotaal(){
+  int sensorReading1 = analogRead(A5);
+  int sensorReading2 = analogRead(A4);
+  int sensorReading3 = analogRead(A3);
+  int sensorReading4 = analogRead(A2);
+  int sensorReading5 = analogRead(A1);
+  return sensorReading1+sensorReading2+sensorReading3+sensorReading4+sensorReading5;
+  }
+
+
+void flameCheck(){
+  vector<int> sensorReading = vlameSensorReadings();
+  if (sensorReading[0]>treshold || sensorReading[1]>treshold || sensorReading[2]>treshold
+  || sensorReading[3]>treshold || sensorReading[4]>treshold){
     flameLocaliser();
     }
   }
 
 
+void vlamUitblazen(){
+  int sensorReadingsTotaal = vlameSensorReadingsTotaal();
+  analogWrite(fanPin,255);
+  while (sensorReadingsTotaal > treshold){
+    delay(3000);
+    sensorReadingsTotaal = vlameSensorReadingsTotaal();
+    }
+  analogWrite(fanPin,0);
+  }
+
+
+void vlamGevonden(){
+  int sensorReadingsTotaal = vlameSensorReadingsTotaal();
+  stoppen();
+  while(sensorReadingsTotaal > treshold){
+    vlamUitblazen();
+    delay(5000);
+    sensorReadingsTotaal = vlameSensorReadingsTotaal();
+    }
+  MP3command(stopgeluid, 4);
+  SireneAan = 0;
+  achteruit();
+  delay(500);
+  stoppen();
+  overwinnings_dansje();
+  }
 
 
 void flameLocaliser(){
-  // Meet de afstand aan de voorkant
-  int voorkant1 = meten(EchoPin4);
+  if(SireneAan==0){
+    MP3command(sirene, 6);
+    SireneAan = 1;
+    }
+  vector<int> afstandVoor = metenVoor();
   delay(80);
-  int voorkant2 = meten(EchoPin5);
-  int zijkantRechts = 0;
-  int zijkantLinks = 0;
-  // Serial.println(String(voorkant1) + " en " + String(voorkant2));
-
-  // leest de flamsensoren uit
-  int sensorReading1 = analogRead(A5);
-  int sensorReading2 = analogRead(A4);
-  int sensorReading3 = analogRead(A3);
-  int sensorReading4 = analogRead(A2);
-  int sensorReading5 = analogRead(A1);
-
-  int totaalReadings = sensorReading1+sensorReading2+sensorReading3+sensorReading4+sensorReading5;
+  vector<int> afstandZijkant = metenZijkant();
   
-  while (25 < voorkant1 && 25 < voorkant2 || totaalReadings < tresholdDichtbij) {
-
-    // leest de flamsensoren uit
-    sensorReading1 = analogRead(A5);
-    sensorReading2 = analogRead(A4);
-    sensorReading3 = analogRead(A3);
-    sensorReading4 = analogRead(A2);
-    sensorReading5 = analogRead(A1);
-    // Serial.println(String(voorkant1) + " en " + String(voorkant2));
-
-    totaalReadings = sensorReading1+sensorReading2+sensorReading3+sensorReading4+sensorReading5;
-
-    Serial.println(sensorReading1);
-    Serial.println(sensorReading2);
-    Serial.println(sensorReading3);
-    Serial.println(sensorReading4);
-    Serial.println(sensorReading5);
+  int totaalSensorReadings = vlameSensorReadingsTotaal();
+  vector<int> sensorReading = vlameSensorReadings();
+  
+  while (25 < afstandVoor[0] && 25 < afstandVoor[1] || totaalSensorReadings < tresholdDichtbij) {
     
-    if (sensorReading1>sensorReading2 && sensorReading1>sensorReading3 && sensorReading1>sensorReading4 && sensorReading1>sensorReading5){
-      Serial.println("rechts");
+    totaalSensorReadings = vlameSensorReadingsTotaal();
+    sensorReading = vlameSensorReadings();
+    
+    if (sensorReading[0]>sensorReading[1] && sensorReading[0]>sensorReading[2] &&
+    sensorReading[0]>sensorReading[3] && sensorReading[0]>sensorReading[4]){
       rechtsaf();
       delay(400);
       }
-    else if (sensorReading2>sensorReading1 && sensorReading2>sensorReading3 && sensorReading2>sensorReading4 && sensorReading2>sensorReading5){
-      Serial.println("rechts-midden");
+    else if (sensorReading[1]>sensorReading[0] && sensorReading[1]>sensorReading[2] &&
+    sensorReading[1]>sensorReading[3] && sensorReading[1]>sensorReading[4]){
       rechtsaf();
       delay(200);
       }
-    else if (sensorReading3>sensorReading1 && sensorReading3>sensorReading2 && sensorReading3>sensorReading4 && sensorReading3>sensorReading5){
-      Serial.println("midden");
+    else if (sensorReading[2]>sensorReading[0] && sensorReading[2]>sensorReading[1] &&
+    sensorReading[2]>sensorReading[3] && sensorReading[2]>sensorReading[4]){
       rechtdoor();
-      if (25 < voorkant1 || 25 < voorkant2){
-        zijkantRechts = meten(EchoPin2);
+      if (25 < afstandVoor[0] || 25 < afstandVoor[1]){
+        afstandVoor = metenVoor();
         delay(80);
-        zijkantLinks= meten(EchoPin1);
-        delay(80);
-        voorkant1 = meten(EchoPin4);
-        delay(80);
-        voorkant2 = meten(EchoPin5);
-
-        int reactie_keuze = blokkade_checker(zijkantLinks, zijkantRechts, 25, 30, voorkant1, voorkant2);
-
+        afstandZijkant = metenZijkant();
+        
+        int reactie_keuze = blokkade_checker(metenZijkant[0], metenZijkant[1], 25, 30,
+        metenVoor[0], metenVoor[1]);
         richting(reactie_keuze, 30);        
         
         break;
         }
       }
-    else if (sensorReading4>sensorReading1 && sensorReading4>sensorReading2 && sensorReading4>sensorReading3 && sensorReading4>sensorReading5){
-      Serial.println("links-midden");
+    else if (sensorReading[3]>sensorReading[0] && sensorReading[3]>sensorReading[1] &&
+    sensorReading[3]>sensorReading[2] && sensorReading[3]>sensorReading[4]){
       linksaf();
       delay(200);
       }
-    else if (sensorReading5>sensorReading1 && sensorReading5>sensorReading2 && sensorReading5>sensorReading3 && sensorReading5>sensorReading4){
-      Serial.println("links");
+    else if (sensorReading[4]>sensorReading[0] && sensorReading[4]>sensorReading[1] &&
+    sensorReading[4]>sensorReading[2] && sensorReading[4]>sensorReading[3]){
       linksaf();
       delay(400);
       }
     rechtdoor();
     delay(100);  
-
       
-    // meet de afstand aan de voorkant
-    voorkant1 = meten(EchoPin4);
-    delay(80);
-    voorkant2 = meten(EchoPin5);
-    // Serial.println(String(voorkant1) + " en " + String(voorkant2));
+    afstandVoor = metenVoor();
     }
-    
-  if (totaalReadings > tresholdDichtbij){
-    Serial.println("***Vlam gevonden***");
-    stoppen();
-    analogWrite(fanPin,255);
-    
-    while(true){
-      bool huidigvuur = vuur_tijdens_blussen();
-      if(huidigvuur == false){
-        break;
-      }
-    }
-    
-    analogWrite(fanPin,0);
-    delay(2000);
-    // hier dus nog een keer vuur checken
-    achteruit();
-    delay(400);
-    stoppen();
-    overwinnings_dansje();
+
+  if (totaalSensorReadings > tresholdDichtbij){
+    vlamGevonden();
     }
   }
 
   
 
 
-
 void loop() {
-  
-  //cm 5, is linksvoor, cm4 is rechtsvoor, cm3 is de Voorkant sensor, cm2 is de rechterkant en cm1 is de linkerkant
-  int afstand_te_meten_voor = 25;
-  int afstand_te_meten_zijkant = 30;
-  
-    
-  int cm1 = meten(EchoPin1); //Vraagt de afstand die sensor X meet.
+  vector<int> afstandVoor = metenVoor();
   delay(80);
-  afstandprinten(cm1, 1);
-  
-  int cm2 = meten(EchoPin2);
-  delay(80);
-  afstandprinten(cm2, 2);
-    
-  int cm4 = meten(EchoPin4);
-  delay(80);
-  afstandprinten(cm4, 4);
-  
-  int cm5 = meten(EchoPin5);
-  afstandprinten(cm5, 5);
-  
-    
-  int reactie_keuze = blokkade_checker(cm2, cm1, afstand_te_meten_voor, afstand_te_meten_zijkant, cm4, cm5);
-    
+  vector<int> afstandZijkant = metenZijkant();
+ 
+  int reactie_keuze = blokkade_checker(afstandZijkant[0], afstandZijkant[1],
+  afstand_te_meten_voor, afstand_te_meten_zijkant,afstandVoor[0], afstandVoor[1]);
   richting(reactie_keuze, afstand_te_meten_zijkant);
   
   delay(80);
