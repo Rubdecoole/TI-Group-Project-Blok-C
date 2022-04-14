@@ -12,7 +12,7 @@ De kenmerken van onze brandweerwagen Bruni:
 -	Wanneer Bruni de vlam heeft gevonden en gedoofd gaat hij zijn overwinningsdansje doen.
 -	Ook heeft Bruni een speaker ingebouwd, wanneer Bruni vuur heeft gespot gaat hij met een alarm aan ernaartoe, dit alarm gaat pas weer uit wanneer het vuur is gedoofd. Ook speelt hij tijdens zijn overwinningsdansje een liedje af om te vieren dat het vuur uit is.
 -	We hebben alle draadjes per onderdeel ingetaped met isolatietape voor zo min mogelijk interferentie.
-- De definitieve code die op de arduino staat is de file: "FinalCode.ino".
+- De definitieve code die op de arduino staat is de file: "Main_code_Bruni.ino".
 
 
 Setup Serial MP3 player A:
